@@ -61,7 +61,7 @@ body{padding:0}
 }
 
 /* ripple feedback shared by every tappable element */
-.rippler{position:relative;overflow:hidden}
+.rippler{overflow:hidden}
 .ripple{position:absolute;border-radius:50%;background:rgba(255,224,170,.45);transform:scale(0);animation:rip .55s ease-out forwards;pointer-events:none;z-index:8}
 @keyframes rip{to{transform:scale(2.6);opacity:0}}
 
@@ -267,6 +267,10 @@ function addRipple(el,clientX,clientY){
   span.style.width=span.style.height=size+'px';
   span.style.left=(clientX-r.left-size/2)+'px';
   span.style.top=(clientY-r.top-size/2)+'px';
+  // only force relative positioning on elements that are static by
+  // default — never override an element (like .hotspot) that relies on
+  // position:absolute for its actual on-screen placement
+  if(getComputedStyle(el).position==='static'){ el.style.position='relative'; }
   el.classList.add('rippler');
   el.appendChild(span);
   span.addEventListener('animationend',()=>span.remove());
