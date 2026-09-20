@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="screen-orientation" content="landscape">
+<meta name="screen-orientation" content="portrait">
 <meta name="apple-mobile-web-app-title" content="My Trial">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -106,9 +106,9 @@ h1{margin:0 40px 8px 0;font-size:28px}
 <script>
 const splash=document.getElementById("splash");
 const startBtn=document.getElementById("startBtn");
-async function enterLandscape(){
+async function enterPortrait(){
   try{
-    if(screen.orientation && screen.orientation.lock){ await screen.orientation.lock("landscape"); }
+    if(screen.orientation && screen.orientation.lock){ await screen.orientation.lock("portrait"); }
   }catch(e){}
 }
 let audioCtx=null;
@@ -164,7 +164,7 @@ startBtn.addEventListener("click",async()=>{
   // Повторно запускаем оба звука непосредственно из жеста кнопки.
   beginAudioFromGesture();
   buttonSound();
-  await enterLandscape();
+  await enterPortrait();
   setTimeout(()=>{
     splash.classList.add("hidden");
   },1100);
