@@ -1,4 +1,4 @@
-const CACHE = 'my-trial-v1';
+const CACHE = 'my-trial-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,8 @@ const ASSETS = [
   './menu.webp',
   './manifest.webmanifest',
   './icon-180.png',
-  './icon-512.png'
+  './icon-512.png',
+  './icon-512-maskable.png'
 ];
 
 self.addEventListener('install', e => {
@@ -18,13 +19,23 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
+// stale-while-revalidate: serve from cache instantly, refresh in the background
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    caches.match(e.request).then(cached => {
+      const network = fetch(e.request).then(resp => {
+        if (resp && resp.status === 200) {
+          const copy = resp.clone();
+          caches.open(CACHE).then(cache => cache.put(e.request, copy));
+        }
+        return resp;
+      }).catch(() => cached);
+      return cached || network;
+    })
   );
 });

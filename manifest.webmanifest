@@ -1,23 +1,17 @@
 {
-  "name": "My Trial",
-  "short_name": "My Trial",
-  "start_url": "./",
+  "name": "Мой Путь Воина — Трекер целей",
+  "short_name": "Мой Путь",
+  "description": "Личный трекер целей: здоровье, знания, карьера и внешность.",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "orientation": "landscape",
-  "background_color": "#080a12",
-  "theme_color": "#b51f24",
+  "orientation": "portrait",
+  "background_color": "#14283a",
+  "theme_color": "#14283a",
+  "lang": "ru",
   "icons": [
-    {
-      "src": "icon-180.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
