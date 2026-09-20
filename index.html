@@ -2,18 +2,20 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Мой Путь Воина">
-<title>Мой Путь Воина</title>
+<meta name="apple-mobile-web-app-title" content="My Trial">
+<title>My Trial</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;background:#070b10;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-#app{position:fixed;inset:0;background:#070b10;display:flex;align-items:center;justify-content:center}
-.screen{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#070b10}
+html,body{margin:0;width:100%;height:100%;min-height:100%;background:#070b10;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%;touch-action:manipulation}
+body{padding:0}
+#app{position:fixed;inset:0;width:100vw;height:100dvh;min-height:100svh;overflow:hidden;background:#070b10}
+.screen{position:absolute;inset:0;width:100%;height:100%;min-height:100%;overflow:hidden;display:none;align-items:center;justify-content:center;background:#070b10;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+
 .screen.active{display:flex}
-.art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.art{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;object-position:center center;display:block;-webkit-user-drag:none;user-select:none}
 .hotspot{position:absolute;border:0;background:transparent;cursor:pointer;z-index:5}
 #start{left:19%;right:19%;top:67%;height:9.5%;border-radius:40px}
 #health{left:37%;right:3%;top:65%;height:10.5%}
@@ -35,6 +37,21 @@ html,body{margin:0;width:100%;height:100%;background:#070b10;overflow:hidden;fon
 #panelTitle{padding-right:45px}
 @media (min-aspect-ratio: 3/5) {
   .art{object-fit:contain}
+}
+
+/* iPhone 12 / portrait tuning: 390×844 CSS px, with safe areas */
+@media (max-width:430px) and (max-height:900px) and (orientation:portrait){
+  .screen{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  .art{width:100vw;height:100dvh;object-fit:cover;object-position:center center}
+  #start{left:18%;right:18%;top:68%;height:9%;}
+  #health{left:34%;right:4%;top:65%;height:10%;}
+  #knowledge{left:34%;right:4%;top:48%;height:12%;}
+  #career{left:37%;right:3%;top:36%;height:10%;}
+  #appearance{left:40%;right:3%;top:24%;height:9%;}
+  #panel{left:4%;right:4%;top:calc(env(safe-area-inset-top) + 3%);bottom:calc(env(safe-area-inset-bottom) + 3%);padding:20px 18px;border-radius:22px}
+  #panel h2{font-size:25px}
+  .task{font-size:15px;gap:10px;padding:12px 0}
+  .task input{width:21px;height:21px}
 }
 </style>
 </head>
