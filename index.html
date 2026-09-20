@@ -12,23 +12,34 @@
 <title>My Trial</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;min-height:100%;background:#14283a;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%;touch-action:manipulation}
+html,body{margin:0;width:100%;height:100%;min-height:100%;background:#14283a;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%;-webkit-touch-callout:none;touch-action:manipulation}
 body{padding:0}
 #app{position:fixed;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;background:#14283a}
-.screen{position:absolute;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;display:none;align-items:center;justify-content:center;background:#14283a;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.screen{position:absolute;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;display:none;background:#14283a}
 .screen::before{content:"";position:absolute;inset:-24px;background-image:var(--art-bg);background-size:150%;background-position:50% 50%;filter:blur(20px) brightness(.55);transform:scale(1.06);z-index:0;animation:drift 26s ease-in-out infinite alternate}
 @keyframes drift{
-  0%{background-position:48% 52%;transform:scale(1.06)}
-  100%{background-position:53% 47%;transform:scale(1.1)}
+  0%{transform:scale(1.06) translate3d(-6px,4px,0)}
+  100%{transform:scale(1.1) translate3d(6px,-4px,0)}
 }
-.screen.active{display:flex}
+.screen.active{display:block}
 
-/* Stage: sized in JS to the artwork's exact pixel aspect ratio (see
-   fitStage()) so it never crops and hotspots (measured in % of the
-   artwork) always land exactly on the drawn buttons/panels, on any
-   screen size or orientation. */
-.stage{position:relative;margin:auto;z-index:1}
+/* ---------- Stage ----------
+   fitStage() sizes and positions the stage in JS to the artwork's exact
+   aspect ratio, so hotspots (in % of the artwork) always land on the
+   drawn buttons.
+   - If the artwork is almost the same shape as the screen (iPhone 12
+     portrait vs. splash.webp) it FILLS the whole screen edge to edge,
+     under the notch and home bar (data-fit="cover").
+   - Otherwise it is fitted without cropping and its edges melt softly
+     into the blurred backdrop (data-fit="bars-v" / "bars-h"). */
+.stage{position:absolute;z-index:1;--edge:3.5%}
 .art{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;-webkit-user-drag:none;user-select:none;z-index:1}
+.stage[data-fit="bars-v"] .art{
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--edge),#000 calc(100% - var(--edge)),transparent 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 var(--edge),#000 calc(100% - var(--edge)),transparent 100%)}
+.stage[data-fit="bars-h"] .art{
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 var(--edge),#000 calc(100% - var(--edge)),transparent 100%);
+          mask-image:linear-gradient(to right,transparent 0,#000 var(--edge),#000 calc(100% - var(--edge)),transparent 100%)}
 
 .hotspot{position:absolute;border:0;background:transparent;cursor:pointer;z-index:5}
 #start{left:18%;right:18%;top:61%;height:7%;border-radius:40px}
@@ -37,20 +48,68 @@ body{padding:0}
 #career{left:36%;right:3%;top:33%;height:14%}
 #appearance{left:36%;right:3%;top:19%;height:13%}
 
-/* Wind: soft drifting motes (pollen/embers/mist) — decorative,
-   sits above the artwork, below the tap panel, never blocks input. */
-.wind{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2}
-.wind i{position:absolute;bottom:-6%;left:var(--left);width:var(--size);height:var(--size);border-radius:50%;background:radial-gradient(circle,rgba(255,244,220,1),rgba(255,220,160,.6) 55%,rgba(255,220,160,0) 75%);opacity:0;box-shadow:0 0 6px 1px rgba(255,225,170,.5);animation:rise var(--dur) linear var(--delay) infinite}
-@keyframes rise{
-  0%{transform:translate(0,0);opacity:0}
-  8%{opacity:var(--op)}
-  50%{transform:translate(var(--drift),-55vh)}
-  92%{opacity:var(--op)}
-  100%{transform:translate(calc(var(--drift) * -1),-112vh);opacity:0}
+/* ---------- Living scene: birds, wind, grass ----------
+   Sits above the artwork, below the tap panel, never blocks touches.
+   The wind blows left -> right: gusts, leaves, birds and the grass wave
+   all travel the same way. */
+.fx{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2}
+.fx::before{content:"";position:absolute;left:0;right:0;bottom:0;height:13%;background:linear-gradient(to top,rgba(4,10,16,.6),rgba(4,10,16,0))}
+
+/* birds */
+.bird{position:absolute;left:0;top:var(--y);width:var(--s);opacity:var(--o);will-change:transform;
+  filter:drop-shadow(0 0 1.5px rgba(8,16,24,.75));
+  animation:fly var(--dur) linear var(--delay) infinite}
+.bird .bob{display:block;animation:bob var(--bob) ease-in-out infinite alternate}
+.bird svg{display:block;width:100%;height:auto;overflow:visible}
+.bird path{fill:none;stroke:var(--bird,#c9d4df);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@keyframes fly{
+  0%{transform:translate3d(-40px,0,0)}
+  100%{transform:translate3d(calc(100vw + 40px),var(--dy),0)}
 }
+@keyframes bob{from{transform:translateY(-4px)}to{transform:translateY(4px)}}
+
+/* wind gusts: thin soft streaks that sweep across, then rest */
+.gust{position:absolute;left:0;top:var(--y);width:var(--w);opacity:0;will-change:transform,opacity;
+  animation:gust var(--dur) linear var(--delay) infinite}
+.gust svg{display:block;width:100%;height:auto;overflow:visible}
+.gust path{fill:none;stroke:url(#gustGrad);stroke-linecap:round}
+.gust .a{stroke-width:1.4}
+.gust .b{stroke-width:.9;opacity:.7}
+@keyframes gust{
+  0%{transform:translate3d(-220px,0,0);opacity:0}
+  6%{opacity:var(--op)}
+  40%{opacity:var(--op)}
+  48%,100%{transform:translate3d(calc(100vw + 60px),var(--dy),0);opacity:0}
+}
+
+/* leaves carried by the wind */
+.leaf{position:absolute;left:0;top:var(--y);width:var(--s);opacity:.85;will-change:transform;
+  animation:blow var(--dur) linear var(--delay) infinite}
+.leaf svg{display:block;width:100%;height:auto;fill:var(--c);animation:tumble var(--spin) linear infinite}
+@keyframes blow{
+  0%{transform:translate3d(-20px,0,0)}
+  25%{transform:translate3d(25vw,-14px,0)}
+  50%{transform:translate3d(50vw,8px,0)}
+  75%{transform:translate3d(75vw,-10px,0)}
+  100%{transform:translate3d(calc(100vw + 20px),4px,0)}
+}
+@keyframes tumble{to{transform:rotate(360deg)}}
+
+/* grass along the bottom edge; each tuft leans with the wind */
+.grass{position:absolute;left:0;right:0;bottom:0;height:0}
+.grass.back{opacity:.92}
+.tuft{position:absolute;bottom:-2px;transform-origin:50% 100%;will-change:transform;
+  animation:sway var(--sd) ease-in-out var(--sdl) infinite alternate}
+.tuft svg{display:block;width:100%;height:100%;overflow:visible}
+@keyframes sway{
+  from{transform:rotate(calc(var(--amp) * -.6))}
+  to{transform:rotate(var(--amp))}
+}
+
 @media (prefers-reduced-motion: reduce){
   .screen::before{animation:none}
-  .wind i{animation:none;display:none}
+  .bird,.gust,.leaf{display:none}
+  .tuft{animation:none}
 }
 
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:10}
@@ -69,24 +128,43 @@ body{padding:0}
 </style>
 </head>
 <body>
+<!-- shared gradients for the wind streaks and the grass -->
+<svg width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gustGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="200" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gBack" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#0d222a"/>
+      <stop offset="1" stop-color="#3b6a5c"/>
+    </linearGradient>
+    <linearGradient id="gFront" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#040c12"/>
+      <stop offset="1" stop-color="#16342f"/>
+    </linearGradient>
+  </defs>
+</svg>
+
 <div id="app">
   <section id="splash" class="screen active">
     <div class="stage">
       <img class="art" src="splash.webp" alt="" width="853" height="1844">
-      <div class="wind" aria-hidden="true"></div>
       <button id="start" class="hotspot" aria-label="Начать"></button>
     </div>
+    <div class="fx" aria-hidden="true"></div>
   </section>
 
   <section id="menu" class="screen">
     <div class="stage">
       <img class="art" src="menu.webp" alt="" width="864" height="1454">
-      <div class="wind" aria-hidden="true"></div>
       <button id="health" class="hotspot" aria-label="Здоровье"></button>
       <button id="knowledge" class="hotspot" aria-label="Знания и навыки"></button>
       <button id="career" class="hotspot" aria-label="Карьера и финансы"></button>
       <button id="appearance" class="hotspot" aria-label="Внешность"></button>
     </div>
+    <div class="fx" aria-hidden="true"></div>
   </section>
 
   <div id="panel">
@@ -104,51 +182,141 @@ document.querySelectorAll('.screen').forEach(screen=>{
   if(img) screen.style.setProperty('--art-bg', `url(${img.src})`);
 });
 
-// Size each .stage to exactly match its artwork's aspect ratio, fitted
-// (never cropped) inside the available screen area — like object-fit:
-// contain, but as a real box so absolutely-positioned hotspots line up
-// with the artwork pixel-for-pixel on every device.
+// ---------- Fit to the screen (built for iPhone 12: 390 x 844) ----------
 const RATIOS={splash:853/1844, menu:864/1454};
+const COVER_MAX_ZOOM=1.08; // if filling the screen needs <=8% crop, fill it; otherwise letterbox
 const appEl=document.getElementById('app');
 function fitStage(name){
   const screen=document.getElementById(name);
   const stage=screen.querySelector('.stage');
-  // Use #app's box (always visible) rather than the individual screen's,
-  // since hidden (display:none) screens report 0 for clientWidth/Height.
-  const cs=getComputedStyle(screen);
-  const availW=appEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-  const availH=appEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const W=appEl.clientWidth, H=appEl.clientHeight;
+  if(!W||!H) return;
   const ar=RATIOS[name];
-  let w,h;
-  if(availW/availH > ar){ h=availH; w=h*ar; }
-  else { w=availW; h=w/ar; }
+  const wide=W/H>ar; // screen is wider than the artwork
+  // contain (no crop)
+  let w=wide?H*ar:W, h=wide?H:W/ar;
+  // cover (no bars)
+  const cw=wide?W:H*ar, ch=wide?W/ar:H;
+  let fit=wide?'bars-h':'bars-v';
+  if(cw/w<=COVER_MAX_ZOOM){ w=cw; h=ch; fit='cover'; }
   stage.style.width=w+'px';
   stage.style.height=h+'px';
+  stage.style.left=((W-w)/2)+'px';
+  stage.style.top=((H-h)/2)+'px';
+  stage.dataset.fit=fit;
 }
 function fitAll(){ try{ Object.keys(RATIOS).forEach(fitStage); }catch(e){} }
 fitAll();
 window.addEventListener('resize', fitAll);
 window.addEventListener('orientationchange', ()=>setTimeout(fitAll,50));
+if(window.visualViewport) window.visualViewport.addEventListener('resize', fitAll);
 
-// Wind: generate randomized drifting motes once per screen
-function makeWind(container,count){
-  if(!container) return;
-  for(let i=0;i<count;i++){
-    const p=document.createElement('i');
-    const size=(Math.random()*10+7).toFixed(1);
-    const left=(Math.random()*100).toFixed(1);
-    const dur=(Math.random()*7+9).toFixed(1);
-    const delay=(-Math.random()*dur).toFixed(1);
-    const drift=(Math.random()*80-40).toFixed(0);
-    const op=(Math.random()*0.35+0.35).toFixed(2);
-    p.style.cssText=`--size:${size}px;--left:${left}%;--dur:${dur}s;--delay:${delay}s;--drift:${drift}px;--op:${op}`;
-    container.appendChild(p);
+// ---------- Living scene: birds, wind, grass ----------
+// y values are % of screen height. Tweak here if birds/wind cross
+// something they shouldn't.
+const FX={
+  splash:{birds:7, birdY:[9,32],  gusts:5, gustY:[12,58], leaves:5, leafY:[68,94]},
+  menu:  {birds:4, birdY:[7,21],  gusts:3, gustY:[7,21],  leaves:3, leafY:[90,97]}
+};
+const GRASS={ back:{h:88, tw:32, step:15, blades:5, grad:'gBack',  d:3.8, amp:5.5},
+              front:{h:54, tw:22, step:12, blades:4, grad:'gFront', d:3.0, amp:7} };
+const LEAF_COLORS=['#8a9a5b','#b08a4a','#6f8a52','#a3733f'];
+const reduceMotion=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+const setVars=(el,o)=>{ for(const k in o) el.style.setProperty('--'+k,o[k]); };
+
+const BIRD_SVG=(dur,begin)=>`<span class="bob"><svg viewBox="0 0 24 12"><path d="M1 6.5 Q6 4 12 7.5 Q18 4 23 6.5"><animate attributeName="d" dur="${dur}s" begin="${begin}s" repeatCount="indefinite" values="M1 2.5 Q6 3.5 12 8 Q18 3.5 23 2.5;M1 6.5 Q6 4 12 7.5 Q18 4 23 6.5;M1 10.5 Q6 5 12 7 Q18 5 23 10.5;M1 6.5 Q6 4 12 7.5 Q18 4 23 6.5;M1 2.5 Q6 3.5 12 8 Q18 3.5 23 2.5"/></path></svg></span>`;
+const GUST_SVG='<svg viewBox="0 0 200 24"><path class="a" d="M0 13 C35 13 60 5 100 10 S165 18 186 10 c7 -4 13 2 7 6"/><path class="b" d="M20 19 C55 19 80 13 115 17 S160 21 178 17"/></svg>';
+const LEAF_SVG='<svg viewBox="0 0 10 6"><path d="M0 3 Q4 -1 10 3 Q4 7 0 3Z"/></svg>';
+
+function rollBird(b,c,first){
+  const s=rand(11,21);
+  const dur=38-(s-11)*1.6+rand(-3,3);
+  setVars(b,{ s:s.toFixed(1)+'px', y:rand(c.birdY[0],c.birdY[1]).toFixed(1)+'%',
+              dy:rand(-30,20).toFixed(0)+'px', o:(0.55+(s-11)/10*0.4).toFixed(2),
+              dur:dur.toFixed(1)+'s', bob:rand(1.4,2.6).toFixed(1)+'s' });
+  if(first) b.style.setProperty('--delay',(-rand(0,dur)).toFixed(1)+'s');
+}
+function rollGust(g,c,first){
+  const dur=rand(9,16);
+  setVars(g,{ w:rand(110,200).toFixed(0)+'px', y:rand(c.gustY[0],c.gustY[1]).toFixed(1)+'%',
+              dy:rand(-8,12).toFixed(0)+'px', op:rand(.25,.5).toFixed(2), dur:dur.toFixed(1)+'s' });
+  if(first) g.style.setProperty('--delay',(-rand(0,dur)).toFixed(1)+'s');
+}
+function rollLeaf(l,c,first){
+  const dur=rand(14,24);
+  setVars(l,{ s:rand(7,11).toFixed(1)+'px', y:rand(c.leafY[0],c.leafY[1]).toFixed(1)+'%',
+              c:pick(LEAF_COLORS), dur:dur.toFixed(1)+'s', spin:rand(2,5).toFixed(1)+'s' });
+  if(first) l.style.setProperty('--delay',(-rand(0,dur)).toFixed(1)+'s');
+}
+
+function buildGrass(fx){
+  fx.querySelectorAll('.grass').forEach(n=>n.remove());
+  const W=appEl.clientWidth||390;
+  ['back','front'].forEach(name=>{
+    const L=GRASS[name];
+    const layer=document.createElement('div');
+    layer.className='grass '+name;
+    const n=Math.ceil(W/L.step)+2;
+    for(let i=0;i<n;i++){
+      const x=-L.tw/2+i*L.step+rand(-3,3);
+      const frac=Math.min(1,Math.max(0,x/W));
+      const th=L.h*rand(.6,1);
+      let blades='';
+      for(let k=0;k<L.blades;k++){
+        const bx=rand(L.tw*.15,L.tw*.85), bh=th*rand(.55,1), lean=rand(-2,7), bw=rand(1.8,3.2);
+        blades+=`<path d="M${bx.toFixed(1)} ${th.toFixed(1)} Q${(bx+lean*.3).toFixed(1)} ${(th-bh*.55).toFixed(1)} ${(bx+lean).toFixed(1)} ${(th-bh).toFixed(1)} Q${(bx+lean*.3+bw).toFixed(1)} ${(th-bh*.45).toFixed(1)} ${(bx+bw).toFixed(1)} ${th.toFixed(1)}Z"/>`;
+      }
+      const t=document.createElement('div');
+      t.className='tuft';
+      t.style.cssText=`left:${x.toFixed(1)}px;width:${L.tw}px;height:${th.toFixed(1)}px`;
+      // the wave: tufts further right start a little later, so gusts visibly travel left -> right
+      setVars(t,{ sd:L.d+'s', sdl:(-(2*L.d)+frac*2.0).toFixed(2)+'s', amp:(L.amp*rand(.75,1.2)).toFixed(1)+'deg' });
+      t.innerHTML=`<svg viewBox="0 0 ${L.tw} ${th.toFixed(1)}" fill="url(#${L.grad}) #1c403c">${blades}</svg>`;
+      layer.appendChild(t);
+    }
+    fx.appendChild(layer);
+  });
+}
+
+function buildFx(name){
+  const fx=document.querySelector('#'+name+' .fx');
+  const c=FX[name];
+  if(!fx||!c) return;
+  if(!reduceMotion){
+    for(let i=0;i<c.gusts;i++){
+      const g=document.createElement('div'); g.className='gust'; g.innerHTML=GUST_SVG;
+      rollGust(g,c,true);
+      g.addEventListener('animationiteration',e=>{ if(e.animationName==='gust') rollGust(g,c,false); });
+      fx.appendChild(g);
+    }
+    for(let i=0;i<c.birds;i++){
+      const b=document.createElement('div'); b.className='bird';
+      b.innerHTML=BIRD_SVG(rand(.75,1.1).toFixed(2), (-rand(0,1)).toFixed(2));
+      rollBird(b,c,true);
+      b.addEventListener('animationiteration',e=>{ if(e.animationName==='fly') rollBird(b,c,false); });
+      fx.appendChild(b);
+    }
+  }
+  buildGrass(fx);
+  if(!reduceMotion){
+    for(let i=0;i<c.leaves;i++){
+      const l=document.createElement('div'); l.className='leaf'; l.innerHTML=LEAF_SVG;
+      rollLeaf(l,c,true);
+      l.addEventListener('animationiteration',e=>{ if(e.animationName==='blow') rollLeaf(l,c,false); });
+      fx.appendChild(l);
+    }
   }
 }
-try{
-  makeWind(document.querySelector('#splash .wind'),12);
-  makeWind(document.querySelector('#menu .wind'),9);
-}catch(e){}
+try{ Object.keys(FX).forEach(buildFx); }catch(e){}
+
+// rebuild the grass if the screen width changes a lot (rotation, desktop resize)
+let grassW=appEl.clientWidth;
+window.addEventListener('resize',()=>{
+  const W=appEl.clientWidth;
+  if(Math.abs(W-grassW)>40){ grassW=W; document.querySelectorAll('.fx').forEach(buildGrass); }
+});
 
 const data={
  health:{title:"ЗДОРОВЬЕ",sub:"Энергия для большого",tasks:["Болит копчик","Зуб","Глаза","Плохая осанка и походка","Лысина","Изжога","Проблема с питанием","Астма"]},
@@ -173,7 +341,7 @@ function goToMenu(e){
   splash.classList.remove("active");
   splash.style.display="none";
   menu.classList.add("active");
-  menu.style.display="flex";
+  menu.style.display="block";
   fitStage("menu");
 }
 const startBtn=document.getElementById("start");
