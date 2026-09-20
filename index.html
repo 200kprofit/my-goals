@@ -89,6 +89,7 @@ const data={
  appearance:{title:"ВНЕШНОСТЬ",sub:"Уверенность в себе",tasks:["Убрать опухшие глаза","Убрать плохую походку и осанку","Убрать / зачесать лысину","Следить за гигиеной","Заниматься спортом"]}
 };
 const splash=document.getElementById("splash"),menu=document.getElementById("menu"),panel=document.getElementById("panel");
+menu.style.display="none";
 const title=document.getElementById("panelTitle"),sub=document.getElementById("panelSub"),tasks=document.getElementById("tasks"),bar=document.getElementById("bar"),flash=document.getElementById("flash");
 let audioCtx;
 function clickSound(){
@@ -97,7 +98,18 @@ function clickSound(){
 function transition(){
  flash.classList.remove("go"); void flash.offsetWidth; flash.classList.add("go");
 }
-document.getElementById("start").onclick=()=>{clickSound();transition();setTimeout(()=>{splash.classList.remove("active");menu.classList.add("active")},130)};
+function goToMenu(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  clickSound();
+  transition();
+  splash.classList.remove("active");
+  splash.style.display="none";
+  menu.classList.add("active");
+  menu.style.display="flex";
+}
+const startBtn=document.getElementById("start");
+startBtn.addEventListener("click",goToMenu);
+startBtn.addEventListener("touchend",goToMenu,{passive:false});
 document.getElementById("close").onclick=()=>panel.classList.remove("open");
 function openCat(key){
  clickSound(); const d=data[key]; title.textContent=d.title;sub.textContent=d.sub;
