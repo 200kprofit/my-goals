@@ -13,8 +13,8 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;min-height:100%;background:#14283a;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%;touch-action:manipulation}
 body{padding:0}
-#app{position:fixed;inset:0;width:100vw;height:100dvh;min-height:100svh;overflow:hidden;background:#14283a}
-.screen{position:absolute;inset:0;width:100%;height:100%;min-height:100%;overflow:hidden;display:none;align-items:center;justify-content:center;background:#14283a;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#app{position:fixed;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;background:#14283a}
+.screen{position:absolute;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;display:none;align-items:center;justify-content:center;background:#14283a;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 .screen::before{content:"";position:absolute;inset:-24px;background-image:var(--art-bg);background-size:cover;background-position:center center;filter:blur(18px) brightness(.58);transform:scale(1.06);z-index:0}
     .screen.active{display:flex}
 .art{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;object-position:center center;display:block;-webkit-user-drag:none;user-select:none;z-index:1}
@@ -40,7 +40,7 @@ body{padding:0}
 /* iPhone 12 / portrait tuning: 390×844 CSS px, with safe areas */
 @media (max-width:430px) and (max-height:900px) and (orientation:portrait){
   .screen{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-  .art{width:100vw;height:100dvh;object-fit:cover;object-position:center center;background:transparent}
+  .art{width:100%;height:100%;object-fit:cover;object-position:center center;background:transparent}
   #start{left:18%;right:18%;top:68%;height:9%;}
   #health{left:34%;right:4%;top:65%;height:10%;}
   #knowledge{left:34%;right:4%;top:48%;height:12%;}
