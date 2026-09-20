@@ -26,21 +26,15 @@ html,body{margin:0;width:100%;height:100%;min-height:100%;background:#14283a;ove
 body{padding:0}
 #app{position:fixed;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;background:#14283a}
 .screen{position:absolute;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;display:none;flex-direction:column;background:#14283a;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-.screen::before{content:"";position:absolute;inset:-24px;background-image:var(--art-bg);background-size:150%;background-position:50% 50%;filter:blur(20px) brightness(.55);transform:scale(1.06);z-index:0;animation:drift 26s ease-in-out infinite alternate}
-@keyframes drift{
-  0%{background-position:48% 52%;transform:scale(1.06)}
-  100%{background-position:53% 47%;transform:scale(1.1)}
-}
 .screen.active{display:flex}
 #menu.screen{padding-top:0}
 
-/* Stage: sized in JS to the artwork's exact pixel aspect ratio (see
-   fitStage()) so it never crops and hotspots (measured in % of the
-   artwork) always land exactly on the drawn buttons/panels, on any
-   screen size or orientation. */
+/* Stage: sized in JS to fill the whole available screen (no bars).
+   The art crops via object-fit:cover to match, and fitStage() re-projects
+   the hotspot rects onto the visible crop so taps stay pixel-exact. */
 .stageWrap{position:relative;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}
-.stage{position:relative;margin:auto;z-index:1;will-change:transform}
-.art{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;-webkit-user-drag:none;user-select:none;z-index:1;transform-origin:50% 42%;animation:kenburns 22s ease-in-out infinite alternate}
+.stage{position:relative;margin:auto;z-index:1;will-change:transform;overflow:hidden}
+.art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;-webkit-user-drag:none;user-select:none;z-index:1;transform-origin:50% 42%;animation:kenburns 22s ease-in-out infinite alternate}
 @keyframes kenburns{0%{transform:scale(1)}100%{transform:scale(1.045)}}
 
 .hotspot{position:absolute;border:0;background:transparent;cursor:pointer;z-index:5;padding:0}
@@ -65,19 +59,8 @@ body{padding:0}
 .ripple{position:absolute;border-radius:50%;background:rgba(255,224,170,.45);transform:scale(0);animation:rip .55s ease-out forwards;pointer-events:none;z-index:8}
 @keyframes rip{to{transform:scale(2.6);opacity:0}}
 
-/* Wind: soft drifting motes (pollen/embers/mist) */
-.wind{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2}
-.wind i{position:absolute;bottom:-6%;left:var(--left);width:var(--size);height:var(--size);border-radius:50%;background:radial-gradient(circle,rgba(255,244,220,1),rgba(255,220,160,.6) 55%,rgba(255,220,160,0) 75%);opacity:0;box-shadow:0 0 6px 1px rgba(255,225,170,.5);animation:rise var(--dur) linear var(--delay) infinite}
-@keyframes rise{
-  0%{transform:translate(0,0);opacity:0}
-  8%{opacity:var(--op)}
-  50%{transform:translate(var(--drift),-55vh)}
-  92%{opacity:var(--op)}
-  100%{transform:translate(calc(var(--drift) * -1),-112vh);opacity:0}
-}
 @media (prefers-reduced-motion: reduce){
-  .screen::before,.art,.hint,.wind i{animation:none!important;display:revert}
-  .wind i{display:none}
+  .art,.hint{animation:none!important;display:revert}
 }
 
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:30}
@@ -143,7 +126,6 @@ body{padding:0}
     <div class="stageWrap">
       <div class="stage">
         <img class="art" src="splash.webp" alt="" width="853" height="1844">
-        <div class="wind" aria-hidden="true"></div>
         <button id="start" class="hotspot hint" aria-label="Начать"></button>
       </div>
     </div>
@@ -160,7 +142,6 @@ body{padding:0}
     <div class="stageWrap">
       <div class="stage">
         <img class="art" src="menu.webp" alt="" width="864" height="1454">
-        <div class="wind" aria-hidden="true"></div>
         <button id="health" class="hotspot hint" aria-label="Здоровье"></button>
         <button id="knowledge" class="hotspot hint" aria-label="Знания и навыки"></button>
         <button id="career" class="hotspot hint" aria-label="Карьера и финансы"></button>
@@ -180,12 +161,23 @@ body{padding:0}
   <div class="flash" id="flash"></div>
 </div>
 <script>
-document.querySelectorAll('.screen').forEach(screen=>{
-  const img=screen.querySelector('.art');
-  if(img) screen.style.setProperty('--art-bg', `url(${img.src})`);
-});
-
 const RATIOS={splash:853/1844, menu:864/1454};
+// Hotspot geometry as authored against the FULL, uncropped artwork
+// (left/top/width/height, all in % of the image). fitStage() below
+// re-projects these onto whatever slice of the image is actually
+// visible once object-fit:cover crops it to fill the iPhone 12 screen,
+// so the tap zones stay pixel-exact on the real buttons/panels.
+const HOTSPOTS={
+  splash:[
+    {id:'start', left:18, top:61, width:64, height:7}
+  ],
+  menu:[
+    {id:'health',     left:36, top:66, width:61, height:23},
+    {id:'knowledge',  left:36, top:48, width:61, height:17},
+    {id:'career',     left:36, top:33, width:61, height:14},
+    {id:'appearance', left:36, top:19, width:61, height:13}
+  ]
+};
 const appEl=document.getElementById('app');
 function fitStage(name){
   const screen=document.getElementById(name);
@@ -201,37 +193,34 @@ function fitStage(name){
     const hud=document.getElementById('hud');
     if(hud) availH -= hud.offsetHeight;
   }
-  const ar=RATIOS[name];
-  let w,h;
-  if(availW/availH > ar){ h=availH; w=h*ar; }
-  else { w=availW; h=w/ar; }
-  stage.style.width=w+'px';
-  stage.style.height=h+'px';
+  // Stage now always fills the full available box — no more letterbox
+  // bars on the sides. The art itself crops (object-fit:cover) to match.
+  stage.style.width=availW+'px';
+  stage.style.height=availH+'px';
+
+  // Work out how much of the source image is actually visible after the
+  // cover-crop, then re-project every hotspot from "% of full artwork"
+  // onto "% of the visible slice", so taps still land exactly on the
+  // buttons/panels drawn in the art.
+  const imageAR=RATIOS[name];
+  const containerAR=availW/availH;
+  let visW=1, visH=1, cropL=0, cropT=0;
+  if(containerAR>imageAR){ visH=imageAR/containerAR; cropT=(1-visH)/2; }   // width fills, top/bottom cropped
+  else { visW=containerAR/imageAR; cropL=(1-visW)/2; }                    // height fills, left/right cropped
+  (HOTSPOTS[name]||[]).forEach(h=>{
+    const el=document.getElementById(h.id);
+    if(!el) return;
+    el.style.left=((h.left/100-cropL)/visW*100)+'%';
+    el.style.top=((h.top/100-cropT)/visH*100)+'%';
+    el.style.width=(h.width/100/visW*100)+'%';
+    el.style.height=(h.height/100/visH*100)+'%';
+    el.style.right='auto';
+  });
 }
 function fitAll(){ try{ Object.keys(RATIOS).forEach(fitStage); }catch(e){} }
 fitAll();
 window.addEventListener('resize', fitAll);
 window.addEventListener('orientationchange', ()=>setTimeout(fitAll,50));
-
-// Wind motes
-function makeWind(container,count){
-  if(!container) return;
-  for(let i=0;i<count;i++){
-    const p=document.createElement('i');
-    const size=(Math.random()*10+7).toFixed(1);
-    const left=(Math.random()*100).toFixed(1);
-    const dur=(Math.random()*7+9).toFixed(1);
-    const delay=(-Math.random()*dur).toFixed(1);
-    const drift=(Math.random()*80-40).toFixed(0);
-    const op=(Math.random()*0.35+0.35).toFixed(2);
-    p.style.cssText=`--size:${size}px;--left:${left}%;--dur:${dur}s;--delay:${delay}s;--drift:${drift}px;--op:${op}`;
-    container.appendChild(p);
-  }
-}
-try{
-  makeWind(document.querySelector('#splash .wind'),12);
-  makeWind(document.querySelector('#menu .wind'),9);
-}catch(e){}
 
 // ---------- sound + haptics ----------
 let audioCtx;
