@@ -25,9 +25,8 @@
 html,body{margin:0;width:100%;height:100%;min-height:100%;background:#14283a;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%;touch-action:manipulation}
 body{padding:0}
 #app{position:fixed;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;background:#14283a}
-.screen{position:absolute;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;display:none;flex-direction:column;background:#14283a;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.screen{position:absolute;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;display:none;flex-direction:column;background:#14283a}
 .screen.active{display:flex}
-#menu.screen{padding-top:0}
 
 /* Stage: sized in JS to fill the whole available screen (no bars).
    The art crops via object-fit:cover to match, and fitStage() re-projects
@@ -68,7 +67,7 @@ body{padding:0}
 @keyframes flash{0%{opacity:.18}100%{opacity:0}}
 
 /* HUD (menu screen only) */
-#hud{flex:0 0 auto;position:relative;z-index:6;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px}
+#hud{flex:0 0 auto;position:relative;z-index:6;display:flex;align-items:center;gap:10px;padding:10px 14px calc(env(safe-area-inset-bottom) + 10px)}
 .iconbtn{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,220,150,.35);background:rgba(8,14,21,.72);backdrop-filter:blur(6px);color:#fff0d8;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center}
 .hudProgress{flex:1 1 auto;min-width:0;background:rgba(8,14,21,.6);backdrop-filter:blur(6px);border:1px solid rgba(255,220,150,.22);border-radius:16px;padding:7px 12px}
 .hudTop{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:#f4e6c8;margin-bottom:5px}
@@ -132,13 +131,6 @@ body{padding:0}
   </section>
 
   <section id="menu" class="screen">
-    <div id="hud">
-      <button id="backBtn" class="iconbtn" aria-label="Назад">‹</button>
-      <div class="hudProgress" id="hudProgress">
-        <div class="hudTop"><span>твой путь</span><b id="hudPct">0%</b></div>
-        <div class="hudBarTrack"><i id="hudBar"></i></div>
-      </div>
-    </div>
     <div class="stageWrap">
       <div class="stage">
         <img class="art" src="menu.webp" alt="" width="864" height="1454">
@@ -146,6 +138,13 @@ body{padding:0}
         <button id="knowledge" class="hotspot hint" aria-label="Знания и навыки"></button>
         <button id="career" class="hotspot hint" aria-label="Карьера и финансы"></button>
         <button id="appearance" class="hotspot hint" aria-label="Внешность"></button>
+      </div>
+    </div>
+    <div id="hud">
+      <button id="backBtn" class="iconbtn" aria-label="Назад">‹</button>
+      <div class="hudProgress" id="hudProgress">
+        <div class="hudTop"><span>твой путь</span><b id="hudPct">0%</b></div>
+        <div class="hudBarTrack"><i id="hudBar"></i></div>
       </div>
     </div>
   </section>
