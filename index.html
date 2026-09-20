@@ -24,7 +24,13 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;min-height:100%;background:#14283a;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%;touch-action:manipulation}
 body{padding:0}
-#app{position:fixed;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;background:#14283a}
+#app{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:auto;min-height:0;overflow:hidden;background:#14283a}
+/* iOS bug: installed (standalone) home-screen web apps under-report the
+   viewport height by safe-area-inset-bottom when viewport-fit=cover is
+   set, even though position:fixed;inset:0 should fill the real screen.
+   Compensate only in that mode (detected in JS, see .pwa class below)
+   so normal Safari tabs — where this bug doesn't happen — are untouched. */
+.pwa #app{bottom:calc(-1 * env(safe-area-inset-bottom, 0px))}
 .screen{position:absolute;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;display:none;flex-direction:column;background:#14283a}
 .screen.active{display:flex}
 
@@ -160,6 +166,11 @@ body{padding:0}
   <div class="flash" id="flash"></div>
 </div>
 <script>
+// Flag iOS standalone (added-to-home-screen) mode so CSS can compensate
+// for a WebKit bug where it under-reports viewport height by
+// safe-area-inset-bottom in that mode specifically.
+if (window.navigator.standalone) document.documentElement.classList.add('pwa');
+
 const RATIOS={splash:853/1844, menu:864/1454};
 // Hotspot geometry as authored against the FULL, uncropped artwork
 // (left/top/width/height, all in % of the image). fitStage() below
