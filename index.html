@@ -25,15 +25,14 @@
 html,body{margin:0;width:100%;height:100%;min-height:100%;background:#14283a;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-text-size-adjust:100%;touch-action:manipulation}
 body{padding:0}
 #app{position:fixed;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;background:#14283a}
-.screen{position:absolute;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;display:none;background:#14283a;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.screen{position:absolute;inset:0;width:100%;height:auto;min-height:0;overflow:hidden;display:none;flex-direction:column;background:#14283a;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 .screen::before{content:"";position:absolute;inset:-24px;background-image:var(--art-bg);background-size:150%;background-position:50% 50%;filter:blur(20px) brightness(.55);transform:scale(1.06);z-index:0;animation:drift 26s ease-in-out infinite alternate}
 @keyframes drift{
   0%{background-position:48% 52%;transform:scale(1.06)}
   100%{background-position:53% 47%;transform:scale(1.1)}
 }
 .screen.active{display:flex}
-#splash.screen{align-items:center;justify-content:center}
-#menu.screen{flex-direction:column;align-items:stretch;justify-content:flex-start;padding-top:0}
+#menu.screen{padding-top:0}
 
 /* Stage: sized in JS to the artwork's exact pixel aspect ratio (see
    fitStage()) so it never crops and hotspots (measured in % of the
@@ -191,15 +190,16 @@ const appEl=document.getElementById('app');
 function fitStage(name){
   const screen=document.getElementById(name);
   const stage=screen.querySelector('.stage');
-  const container=screen.querySelector('.stageWrap');
   const cs=getComputedStyle(screen);
-  let availW,availH;
-  if(container){
-    availW=container.clientWidth;
-    availH=container.clientHeight;
-  }else{
-    availW=appEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    availH=appEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  // Always measure off #app (always has a real, definite size) rather than
+  // off a flex child's clientHeight — a flex child sized by flex-grow can
+  // report 0 before layout settles or when its own content is all
+  // position:absolute (no intrinsic size), which collapsed the stage.
+  let availW=appEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  let availH=appEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  if(name==='menu'){
+    const hud=document.getElementById('hud');
+    if(hud) availH -= hud.offsetHeight;
   }
   const ar=RATIOS[name];
   let w,h;
